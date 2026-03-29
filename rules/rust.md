@@ -1,5 +1,4 @@
-# Rust Coding Standards
-
+# Rust
 
 ## Structs
 - Always create structs via a `new()` method (or similarly named constructor)
@@ -14,7 +13,6 @@ pub struct A {
     c: Arc<[u64]>,
     d: Option<bool>
 }
-
 
 impl A {
     pub fn new(b: String, c: Arc<[u64]>, d: Option<bool>) -> Self {
@@ -38,10 +36,8 @@ impl A {
 ## Collections
 - Prefer `Arc<[T]>` over `Vec<T>` for storing collections of data
 
-
 ## Concurrency
 - Prefer scoped threads from `std::thread` over `tokio` where possible
-
 
 ## Code Quality
 - All code must compile without errors
