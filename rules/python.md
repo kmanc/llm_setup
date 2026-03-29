@@ -1,18 +1,14 @@
-# Python Coding Standards
-
+# Python
 
 ## Dictionaries
 - Prefer `.get()` to direct key access
 - Use `defualtdict`, `Counter`, and `OrderedDict` from collections liberaly; do not rely on dictionary ordering from the standard library
 
-
 ## File access
 - Use `with open()` when accessing files
 
-
 ## Memory management
 - Generators and lazy loading save RAM, take advantage of this where it makes sense
-
 
 ## Code Quality
 - List and dictionary comprehensions are ok, but don't try to do too much in one line; lambdas are usually not the best way to solve anything
