@@ -1,17 +1,28 @@
+---
+name: python
+description: Write clean, consistent, and performant Python code. Use this skill when the user asks to write or refine Python code, scripts, projects, or applications. Generates self-documenting, polished code based on the following best practices.
+license: There is no license; I wrote this for me but if you like it, feel free to use it.
+---
+
+This skill guides creation of clean, performant, production-grade Python code.
+
+The user provides code requirements: a project idea, an end goal, a list of inputs and outputs, a description of a function, or an entire existing codebase. They may include context about the purpose, architecture, running environment, or technical constraints.
+
 # Python
 
 ## Dictionaries
 - Prefer `.get()` to direct key access
-- Use `defualtdict`, `Counter`, and `OrderedDict` from collections liberaly; do not rely on dictionary ordering from the standard library
+- Use `defaultdict`, `Counter`, `OrderedDict`, and other datatypes from the collections library liberally; never rely on dictionary ordering from the standard library
 
 ## File access
-- Use `with open()` when accessing files
+- Use the `with open()` pattern when accessing files
 
 ## Memory management
 - Generators and lazy loading save RAM, take advantage of this where it makes sense
 
 ## Code Quality
-- List and dictionary comprehensions are ok, but don't try to do too much in one line; lambdas are usually not the best way to solve anything
+- Lambdas are usually not the best way to solve anything
+- List and dictionary comprehensions are ok, but don't try to do too much in one line
 - The zen of python is a fantastic set of guiding principals
 
 #### Zen of Python
