@@ -89,10 +89,26 @@ enum ConnectionState {
 
 ## Concurrency
 - Prefer scoped threads from `std::thread` over `tokio` where possible
+- Use channels for communicating between threads
+```rust
+use std::thread;
 
-## Code Quality
-- All code must compile without errors
-- All code must pass `cargo clippy` with zero warnings
+// Scoped thread usage maintain determinism
+fn main() {
+     let mut a = vec![1, 2, 3];
+     let mut x = 0;
+     thread::scope(|s| {
+         s.spawn(|| {
+             deb!(&a);
+         });
+         s.spawn(|| {
+             x += a[0] + a[2];
+         });
+     });
+     a.push(4);
+     // At this point, the value of x and the length of a should be the same
+}
+```
 
 ## Use `Cow` for Flexible Ownership
 
@@ -193,5 +209,11 @@ my_app/
 ├── benches/           # Benchmarks
 └── Cargo.toml
 ```
+
+## Code Quality
+- All code must compile without errors
+- All code must pass `cargo clippy` with zero warnings
+  - Do not use `#![allow(warnings)]`, `#[allow(dead_code)]`, `#[allow(unused_variables)]`, or similar suppressions to cheat the clippy warning
+  - `todo!()` is allowed for work-in-progress code, stubs, or other indicators of future work
 
 **Remember**: If it compiles, it's probably correct — but only if you avoid `unwrap()`, minimize `unsafe`, and let the type system work for you.
