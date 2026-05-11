@@ -1,14 +1,16 @@
 ---
 name: python
 description: Write clean, consistent, and performant Python code. Use this skill when the user asks to write or refine Python code, scripts, projects, or applications. Generates self-documenting, polished code based on the following best practices.
-license: There is no license; I wrote this for me but if you like it, feel free to use it.
 ---
 
-This skill guides creation of clean, performant, production-grade Python code.
+This skill guides creation of clean, performant, efficient, and maintainable Python code.
 
-The user provides code requirements: a project idea, an end goal, a list of inputs and outputs, a description of a function, or an entire existing codebase. They may include context about the purpose, architecture, running environment, or technical constraints.
+## When to Activate
 
-# Python
+- Writing new Python code
+- Reviewing Python code
+- Refactoring existing Python code
+- Designing Python packages/modules
 
 ## Dictionaries
 - Prefer `.get()` to direct key access
@@ -19,6 +21,21 @@ The user provides code requirements: a project idea, an end goal, a list of inpu
 
 ## Memory management
 - Generators and lazy loading save RAM, take advantage of this where it makes sense
+
+## Import Conventions
+
+```python
+# Good: Import order - stdlib, third-party, local
+import os
+import sys
+from pathlib import Path
+
+import requests
+from fastapi import FastAPI
+
+from mypackage.models import User
+from mypackage.utils import format_name
+```
 
 ## Code Quality
 - Lambdas are usually not the best way to solve anything
