@@ -18,6 +18,7 @@ This skill guides creation of clean, performant, efficient, and maintainable Rus
   - Accessor methods follow the field name exactly (e.g. field `foo` → method `fn foo(&self)`)
 - Return references like `&str` (not `&String`), `Arc<[T]>` (not `Vec<T>`), and `Option<&T>` (not `&Option<T>`)
 - Use `PhantomData` to design structs that cannot be misused
+  - State machines are your friend with PhantomData; they are easy to use and easy to document
 
 #### Example structs
 ```rust
@@ -75,7 +76,7 @@ impl<Stage> Rocket<Stage> {
 }
 ```
 
-## When Not a Marker, Model States as Enums
+## When Not using a Marker, Model States as Enums
 
 ```rust
 // Impossible states are unrepresentable
