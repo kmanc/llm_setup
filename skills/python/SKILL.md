@@ -42,6 +42,10 @@ from mypackage.utils import format_name
 - List and dictionary comprehensions are ok, but don't try to do too much in one line
 - The zen of python is a fantastic set of guiding principals
 
+## Documentation
+- When refactoring existing code, take care to update code comments to ensure the comments are still accurate
+- Also remember to update any documentation (often a CONTEXT.md and/or README.md) to keep it up-to-date with the code
+
 #### Zen of Python
 ```
 Beautiful is better than ugly.
