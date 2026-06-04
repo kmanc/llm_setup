@@ -217,4 +217,8 @@ my_app/
   - Do not use `#![allow(warnings)]`, `#[allow(dead_code)]`, `#[allow(unused_variables)]`, or similar suppressions to cheat the clippy warning
   - `todo!()` is allowed for work-in-progress code, stubs, or other indicators of future work
 
+## Documentation
+- When refactoring existing code, take care to update code comments to ensure the comments are still accurate
+- Also remember to update any documentation (often a CONTEXT.md and/or README.md) to keep it up-to-date with the code
+
 **Remember**: If it compiles, it's probably correct — but only if you avoid `unwrap()`, minimize `unsafe`, and let the type system work for you.
