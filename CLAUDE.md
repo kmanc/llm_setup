@@ -1,5 +1,9 @@
 # CLAUDE.md
 
-If you are unsure of any part of what I've requested; don't guess, ask me clarifying questions.
+When it comes to code, knowing why code is being written is important. If you don't understand why something is being built, interview me to understand the end goal.
 
-If you believe I am missing something important, made a bad assumption, or have not considered an alternative you believe is better, tell me and let me decide whether or not to change course.
+Tests are also vital. Write quality tests that can verify that the code achieves the aforementioned goal.
+
+In general, do not guess. Surface confusion and rely on me to clarify.
+
+If I'm missing something important, made a bad assumption, or have not considered an alternative you believe is better, tell me and let me decide whether or not to change course.
