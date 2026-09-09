@@ -1,101 +1,38 @@
 ---
 name: rust
-description: Write clean, consistent, and performant Rust code. Use this skill when the user asks to design crate structure or module layout, or write, review, refactor, or refine Rust code, scripts, projects, or applications. Generates self-documenting, polished code based on the following best practices.
+description: Use this skill when the user asks to write, review, refactor, refine, or organize Rust code, crates, modules, scripts, projects, or applications.
 ---
 
-This skill guides creation of clean, performant, efficient, and maintainable Rust code.
+## Types as a correctness mechanism
+- Use the newtype pattern to turn an argument mixups into compile errors
+  - Load [newtype.md](references/types/newtype.md) for examples of leveraging the type system to make argument ordering mistakes impossible
+
+## Ownership and Borrowing
+- Accept generics and return concrete types when possible
+  - Load [generic_input_concrete_output.md](references/ownership/generic_input_concrete_output.md) for examples of functions that take generic inputs and return concrete outputs
+- Use `Cow` when a function usually borrows and only sometimes needs to own
+  - Load [cow.md](references/ownership/cow.md) for examples of functions that take generic inputs and return concrete outputs
 
 ## Structs
 - Construct via `new()` (or a named constructor) so invariants are established in one place
 - Prefer private fields exposed through named accessors — the accessor matches the field name exactly (field `foo` → `fn foo(&self)`)
-- Exception: plain data aggregates — config structs, DTOs, `#[derive(Deserialize)]` payloads — may expose fields directly. An accessor that only returns `&self.x` is noise, and serde needs the fields visible anyway. The rule exists to protect invariants; a struct with none has nothing to protect
-- Return borrows, not clones: `&str` over `&String`, `&[T]` over `Vec<T>`, `Option<&T>` over `&Option<T>`. Hand out `Arc::clone` only when the caller must keep the data alive independently
-- Store `Arc<[T]>` rather than `Vec<T>` for shared immutable data — cloning is a refcount bump, not a copy
+  - Exception: plain data aggregates — config structs, DTOs, `#[derive(Deserialize)]` payloads — may expose fields directly. An accessor that only returns `&self.x` is noise, and serde needs the fields visible anyway. The rule exists to protect invariants; a struct with none has nothing to protect
+- Return borrows, not clones: `&str` over `&String`, `&[T]` over `Vec<T>`, `Option<&T>` over `&Option<T>`
+  - Load [single_thread.md](references/structs/single_thread.md) for examples of structs for general purpose use
+- Store `Arc<[T]>` rather than `Vec<T>`, and return clones of them, for fields that will be shared across threads
+  - Load [multi_thread.md](references/structs/multi_thread.md) for examples of structs for a multi-threaded application
+- Use the consuming builder pattern for structs that have lots of fields, especially if they're optional
+  - Load [consuming_builder.md](references/structs/consuming_builder.md) for examples of structs that uses a consuming builder
 
-#### Example struct
-```rust
-use std::sync::Arc;
-
-pub struct Account {
-    email: String,
-    scores: Arc<[u64]>,
-    nickname: Option<String>,
-}
-
-impl Account {
-    pub fn new(email: String, scores: Vec<u64>, nickname: Option<String>) -> Self {
-        Self { email, scores: Arc::from(scores), nickname }
-    }
-
-    pub fn email(&self) -> &str {
-        &self.email
-    }
-
-    // Borrow for reading; hand out `Arc::clone(&self.scores)` only when the
-    // caller needs to keep the data alive independently.
-    pub fn scores(&self) -> &[u64] {
-        &self.scores
-    }
-
-    pub fn nickname(&self) -> Option<&str> {
-        self.nickname.as_deref()
-    }
-}
-```
 
 ## Modeling State
 - Make illegal states unrepresentable — what the compiler rejects, no test has to catch
 - Use a marker type with `PhantomData` when the *API surface* changes between states: the methods that do not apply simply do not exist
+  - Create transitions that consume `self` for cases where they cannot be applied twice
+  - Load [state_machine.md](references/state/state_machine.md) for examples of structs whose API surface changes between states
 - Use an enum when the *data* changes between states — each variant carries only the fields that state actually has
-- Transitions that consume `self` cannot be applied twice
+  - Load [data_variants.md](references/state/data_variants.md) for examples enums creation and use
 
-#### Example marker-type state machine
-```rust
-use std::marker::PhantomData;
-
-struct Grounded;
-struct Launched;
-
-struct Rocket<Stage = Grounded> {
-    fuel_kg: f64,
-    stage: PhantomData<Stage>,
-}
-
-impl Rocket<Grounded> {
-    fn new(fuel_kg: f64) -> Self {
-        Self { fuel_kg, stage: PhantomData }
-    }
-
-    // Takes `self` by value: a grounded rocket cannot be launched twice,
-    // and `accelerate` does not exist until it has been.
-    fn launch(self) -> Rocket<Launched> {
-        Rocket { fuel_kg: self.fuel_kg, stage: PhantomData }
-    }
-}
-
-impl Rocket<Launched> {
-    fn accelerate(&mut self) {
-        self.fuel_kg -= 1.0;
-    }
-}
-
-impl<Stage> Rocket<Stage> {
-    fn fuel_kg(&self) -> f64 {
-        self.fuel_kg
-    }
-}
-```
-
-#### Example enum state
-```rust
-// Impossible states are unrepresentable
-enum ConnectionState {
-    Disconnected,
-    Connecting { attempt: u32 },
-    Connected { session_id: String },
-    Failed { reason: String, retries: u32 },
-}
-```
 
 ## Errors
 - Libraries return a concrete error enum built with `thiserror` — callers need to match on variants, and `anyhow::Error` erases them
@@ -137,57 +74,6 @@ fn load_config(path: &str) -> Result<Config> {
     let config: Config = toml::from_str(&content)
         .with_context(|| format!("failed to parse config from {path}"))?;
     Ok(config)
-}
-```
-
-## Ownership and Borrowing
-- Accept generics, return concrete types — flexible for callers, and no type parameters leak into your public signatures
-- Use `Cow` when a function usually borrows and only sometimes needs to own
-- Use the newtype pattern to turn an argument mixup into a compile error
-
-#### Example generic input, concrete output
-```rust
-use std::fmt::Display;
-use std::io::Read;
-
-fn read_all(reader: &mut impl Read) -> std::io::Result<Vec<u8>> {
-    let mut buf = Vec::new();
-    reader.read_to_end(&mut buf)?;
-    Ok(buf)
-}
-
-// Trait bounds for multiple constraints
-fn process<T: Display + Send + 'static>(item: T) -> String {
-    format!("processed: {item}")
-}
-```
-
-#### Example Cow
-```rust
-use std::borrow::Cow;
-
-fn normalize(input: &str) -> Cow<'_, str> {
-    if input.contains(' ') {
-        Cow::Owned(input.replace(' ', "_"))
-    } else {
-        Cow::Borrowed(input) // Zero-cost when no mutation needed
-    }
-}
-```
-
-#### Example newtype
-```rust
-use anyhow::Result;
-
-// Distinct types prevent mixing up arguments
-struct UserId(u64);
-struct OrderId(u64);
-struct Order;
-
-// `get_order(order, user)` is a compile error at the call site.
-// Unused parameters in a `todo!()` stub take an underscore prefix, not an `#[allow]`.
-fn get_order(_user: UserId, _order: OrderId) -> Result<Order> {
-    todo!()
 }
 ```
 
@@ -282,4 +168,4 @@ my_app/
 - When refactoring existing code, take care to update code comments to ensure the comments are still accurate
 - Also remember to update any documentation (often a CONTEXT.md and/or README.md) to keep it up-to-date with the code
 
-**Remember**: Push invariants into the type system so the compiler checks them for you — then test the behavior the types cannot express.
+**Remember**: Push invariants into the type system so the compiler checks them for you and test the behavior that types cannot express.
