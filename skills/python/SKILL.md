@@ -1,73 +1,35 @@
 ---
 name: python
-description: Write clean, consistent, and performant Python code. Use this skill when the user asks to design Python packages or modules, or write, review, refactor, or refine Python code, scripts, projects, or applications. Generates self-documenting, polished code based on the following best practices.
+description: Use this skill when the user asks to write, review, refactor, refine, or organize Python code, modules, scripts, packages, projects, or applications
 ---
 
-This skill guides creation of clean, performant, efficient, and maintainable Python code.
 
 ## Type Hints
-- Annotate every public function signature — parameters and return type
+- Annotate every public function signature - parameters and return type - with hints
+  - Load [hints.md](references/types/hints.md) for examples of type hints
 - Use modern syntax: `list[str]`, `dict[str, int]`, `X | None` — not `List`, `Dict`, `Optional`
 - Code should pass `mypy --strict` (or `pyright`) cleanly
 - Avoid `Any`; when a value is genuinely untyped, take `object` and narrow it
 - Use `Protocol` for structural typing instead of demanding a base class
 
-#### Example type hints
-```python
-from collections.abc import Iterable
-from typing import Protocol
-
-class Named(Protocol):
-    name: str
-
-def longest_name(items: Iterable[Named]) -> str | None:
-    return max((item.name for item in items), key=len, default=None)
-```
 
 ## Errors
 - Catch the narrowest exception that can actually be raised
 - Never write a bare `except:` or `except Exception: pass` — an error you swallow is a bug you debug later without a traceback
 - Use `raise ... from e` so the original cause survives
+  - Load [raise.md](references/errors/raise.md) for examples of raising errors
 - Define module-specific exception types; callers should catch your errors, not `ValueError`
 - When skipping an error really is correct, say so explicitly with `contextlib.suppress`
 
-#### Example error handling
-```python
-class ConfigError(Exception):
-    """Raised when a config file is missing or malformed."""
 
-def load_config(path: Path) -> Config:
-    try:
-        raw = tomllib.loads(path.read_text())
-    except OSError as e:
-        raise ConfigError(f"cannot read config at {path}") from e
-    except tomllib.TOMLDecodeError as e:
-        raise ConfigError(f"invalid TOML in {path}") from e
-    return Config(**raw)
-```
-
-## Data Modeling
+## Data modeling
 - Prefer `@dataclass(frozen=True, slots=True)` over passing dicts and tuples around
+  - Load [class.md](references/data/class.md) for examples of dataclasses
 - Use `Enum`/`StrEnum` for a fixed set of values — never bare string literals scattered through the code
+  - Load [enum.md](references/data/enum.md) for examples of enums
 - `NamedTuple` is fine for a small return value with an obvious order
 - Never use a mutable default argument — `def f(items: list[str] = [])` shares one list across every call
 
-#### Example data modeling
-```python
-from dataclasses import dataclass
-from enum import StrEnum
-
-class Status(StrEnum):
-    ACTIVE = "active"
-    SUSPENDED = "suspended"
-
-@dataclass(frozen=True, slots=True)
-class User:
-    id: int
-    email: str
-    status: Status = Status.ACTIVE
-    tags: tuple[str, ...] = ()  # not a list, which cannot be a frozen default
-```
 
 ## Dictionaries
 - Use `d[key]` when the key is required — a `KeyError` at the point of the bug beats a `None` that fails three frames later
@@ -83,30 +45,14 @@ class User:
 
 ## Memory management
 - Generators and lazy loading save RAM; take advantage of this where it makes sense
+  - Load [generators.md](references/memory/generators.md) for examples of generators
 - The tradeoff is single-pass: a generator has no `len()` and cannot be iterated twice. If you need either, build the list
 
-#### Example generator
-```python
-def error_lines(path: Path) -> Iterator[str]:
-    with path.open() as f:
-        yield from (line for line in f if "ERROR" in line)
-```
 
 ## Import Conventions
+- Import from stdlib first, then third-party, then local
+  - Load [order.md](references/imports/order.md) for examples of import organization
 
-#### Example import order
-```python
-# Good: Import order - stdlib, third-party, local
-import os
-import sys
-from pathlib import Path
-
-import requests
-from fastapi import FastAPI
-
-from mypackage.models import User
-from mypackage.utils import format_name
-```
 
 ## Code Quality
 - Never assign a lambda to a name (PEP 8 E731) — use `def`. As a `key=` argument a lambda is fine; anything with branching or more than one expression is a `def`
