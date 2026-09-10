@@ -3,15 +3,18 @@ name: rust
 description: Use this skill when the user asks to write, review, refactor, refine, or organize Rust code, crates, modules, scripts, projects, or applications.
 ---
 
+
 ## Types as a correctness mechanism
 - Use the newtype pattern to turn an argument mixups into compile errors
   - Load [newtype.md](references/types/newtype.md) for examples of leveraging the type system to make argument ordering mistakes impossible
+
 
 ## Ownership and Borrowing
 - Accept generics and return concrete types when possible
   - Load [generic_input_concrete_output.md](references/ownership/generic_input_concrete_output.md) for examples of functions that take generic inputs and return concrete outputs
 - Use `Cow` when a function usually borrows and only sometimes needs to own
   - Load [cow.md](references/ownership/cow.md) for examples of functions that take generic inputs and return concrete outputs
+
 
 ## Structs
 - Construct via `new()` (or a named constructor) so invariants are established in one place
@@ -35,137 +38,63 @@ description: Use this skill when the user asks to write, review, refactor, refin
 
 
 ## Errors
-- Libraries return a concrete error enum built with `thiserror` — callers need to match on variants, and `anyhow::Error` erases them
+- Libraries return a concrete error enum built with `thiserror` so that callers can match on variants
+  - Load [library.md](references/errors/library.md) for examples of errors built in libraries
 - Binaries and tests use `anyhow` with `.context()` — nobody matches on the error out of `main`
+  - Load [binary.md](references/errors/binary.md) for examples of errors built in binaries
 - Add context at each layer; a bare `?` propagates the error but loses the trail
 - Prefer `?` over `match` for propagation
-- Never `unwrap()` on anything reachable at runtime. In tests, and after a check the type system cannot see, `expect("why this holds")` is fine — the message states the invariant
+- Never `unwrap()` on anything reachable at runtime. In tests, and after a check the type system cannot see, `expect("why this holds")` is fine because the message states the invariant
 
-#### Example library error type
-```rust
-use std::path::PathBuf;
-use thiserror::Error;
-
-#[derive(Debug, Error)]
-pub enum ConfigError {
-    #[error("cannot read config at {path}")]
-    Read {
-        path: PathBuf,
-        #[source]
-        source: std::io::Error,
-    },
-
-    #[error("invalid TOML in {path}")]
-    Parse {
-        path: PathBuf,
-        #[source]
-        source: toml::de::Error,
-    },
-}
-```
-
-#### Example binary error handling
-```rust
-use anyhow::{Context, Result};
-
-fn load_config(path: &str) -> Result<Config> {
-    let content = std::fs::read_to_string(path)
-        .with_context(|| format!("failed to read config from {path}"))?;
-    let config: Config = toml::from_str(&content)
-        .with_context(|| format!("failed to parse config from {path}"))?;
-    Ok(config)
-}
-```
 
 ## Iterators
-- Prefer iterator chains over manual loops — declarative, lazy, composable
-- Reach for a plain `for` loop when the body needs early exit, `?`, or side effects; a chain contorted around those is worse than the loop
+- Prefer iterator chains over manual loops
+  - Load [chain.md](references/iterators/chain.md) for examples of using iterator chains
+- Reach for a plain `for` loop when the body needs early exit, `?`, or side effects
+  - Load [for.md](references/iterators/for.md) for examples of using for loops on iteators
 
-#### Example iterator chain
-```rust
-let active_emails: Vec<String> = users.iter()
-    .filter(|u| u.is_active)
-    .map(|u| u.email.clone())
-    .collect();
-```
 
 ## Concurrency
 - Prefer scoped threads from `std::thread` over `tokio` where possible
+  - Load [threads.md](references/concurrency/threads.md) for examples of how to write concurrent code
 - Use channels for communicating between threads
-
-#### Example scoped threads
-```rust
-use std::thread;
-
-// Scoped threads borrow local data; the scope cannot exit until both finish.
-fn main() {
-    let mut a = vec![1, 2, 3];
-    let mut x = 0;
-    thread::scope(|s| {
-        s.spawn(|| {
-            dbg!(&a);
-        });
-        s.spawn(|| {
-            x += a[0] + a[2];
-        });
-    });
-    a.push(4);
-    // At this point, the value of x and the length of a should be the same
-}
-```
+  - Load [channels.md](references/concurrency/channels.md) for examples of how to send data between threads
 
 ## Unsafe
 - Default to safe Rust; `unsafe` is a last resort, not a shortcut
-- Every `unsafe` block carries a `// SAFETY:` comment naming the invariant that makes it sound
-- An `unsafe fn` documents its preconditions under a `# Safety` doc heading
+  - Never reach for `unsafe` to:
+    - bypass the borrow checker
+    - transmute between unrelated types
+    - skip a bounds check that has not been shown to matter
+    - gain convenience
+- Include a `// SAFETY:` comment for every `unsafe` block naming the invariant that makes it sound
+- Documents `unsafe fn` preconditions under a `# Safety` doc heading
 
-Never reach for `unsafe` to:
-- bypass the borrow checker
-- transmute between unrelated types
-- skip a bounds check that has not been shown to matter
-- gain convenience
 
 ## Project Layout
 - Organize by domain, not by type — a module owns a concept, not a category of file
+  - Load [layout.md](references/structure/layout.md) for examples of how to structure a project
 
-#### Example layout
-```text
-my_app/
-├── src/
-│   ├── main.rs
-│   ├── lib.rs
-│   ├── auth/          # Domain module
-│   │   ├── mod.rs
-│   │   ├── token.rs
-│   │   └── middleware.rs
-│   ├── orders/        # Domain module
-│   │   ├── mod.rs
-│   │   ├── model.rs
-│   │   └── service.rs
-│   └── db/            # Infrastructure
-│       ├── mod.rs
-│       └── pool.rs
-├── tests/             # Integration tests
-├── benches/           # Benchmarks
-└── Cargo.toml
-```
 
 ## Tooling
 - All code must compile without errors
 - All code must pass `cargo clippy` with zero warnings
 - All code must pass `cargo fmt --check`
-- Suppressions must be specific and justified — `#[allow(clippy::too_many_arguments)] // FFI signature is fixed`, never a blanket `#![allow(warnings)]`, `#[allow(dead_code)]`, or `#[allow(unused_variables)]` to cheat the warning
-- `todo!()` is allowed for work-in-progress code, stubs, or other indicators of future work — give its still-unused parameters an underscore prefix (`_user`) rather than reaching for `#[allow(unused_variables)]`
+- Do not use suppressions without explicit approval
+- `todo!()` is allowed for work-in-progress code, stubs, or other indicators of future work
+  - Give its still-unused parameters an underscore prefix (`_user`) rather than `#[allow(unused_variables)]`
+
 
 ## Tests
-- Unit tests live in a `#[cfg(test)] mod tests` beside the code; integration tests in `tests/` exercise the public API only
+- Put unit tests in a `#[cfg(test)] mod tests` beside the code; integration tests in `tests/` exercise the public API only
 - Assert on behavior, not on internals
 - `#[should_panic]` needs `expected = "..."` — without it the test passes on the wrong panic
 - Put doctests on public items; they are compiled, so they cannot rot
-- Reach for `proptest` when the input space is wider than the cases worth writing by hand
+- Use `proptest` when the input space is wider than the cases worth writing by hand
+
 
 ## Documentation
-- When refactoring existing code, take care to update code comments to ensure the comments are still accurate
-- Also remember to update any documentation (often a CONTEXT.md and/or README.md) to keep it up-to-date with the code
+- When refactoring existing code, update related code comments to reflect the new reality
+- Also update any related documentation (often a CONTEXT.md and/or README.md) to keep it up-to-date with the code
 
 **Remember**: Push invariants into the type system so the compiler checks them for you and test the behavior that types cannot express.
