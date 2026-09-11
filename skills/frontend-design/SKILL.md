@@ -18,6 +18,15 @@ description: Use this skill when the user asks to build a new UI or reshape or u
   - The subject's industry, subject matter, materials, and vernacular are where distinctive visual choices come from
   - Build with the brief's real content and subject matter throughout
 
+If building a security tool or platform, see the following examples:
+- Load [alert_table_eleken.png](references/examples/alert_table_eleken.png) for an example of a table to display alerts
+- Load [alert_table_rootly.png](references/examples/alert_table_rootly.png) for an example of a table to display alerts
+- Load [api_reference_sanity.png](references/examples/api_reference_sanity.png) for an example of documenting an API
+- Load [api_reference_stripe.png](references/examples/api_reference_stripe.png) for an example of documenting an API
+- Load [dashboard_amplifysec.png](references/examples/dashboard_amplifysec.png) for an example of a post-login landing page dashboard
+- Load [dashboard_behance.png](references/examples/dashboard_behance.png) for an example of a post-login landing page dashboard
+- Load [landing_tracebit.png](references/examples/landing_tracebit.png) for an example of a pre-login landing page
+
 
 ## Design principles
 
